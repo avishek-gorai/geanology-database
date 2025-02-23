@@ -14,7 +14,7 @@
 ;;; You should have received a copy of the GNU General Public License
 ;;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-(in-package geanology-database)
+(in-package #:geanology-database)
 
 (defvar *family*
   (quote ((colin nil nil)
@@ -52,32 +52,62 @@
 
 
 (defun father (person)
-  "Returns the given person's father name."
-  (second (assoc person family)))
+  "Returns father's name."
+  (second (assoc person *family*)))
 
 
 (defun mother (person)
-  "Returns given person's mother name."
-  (third (assoc person family)))
+  "Returns mother's name."
+  (third (assoc person *family*)))
 
 
 (defun parents (person)
-  "Returns given person's parents."
+  "Returns person's parents name as a list."
   (remove-if (function null)
-             (rest (assoc person family))))
+             (list (father person) (mother person))))
 
 
 (defun children (person)
-  "Returns the given person's children name."
-  (if (null person) nil
-      (mapcar (function first)
-              (remove-if-not
-               (function (lambda (entry) (member person (rest entry))))
-               family))))
+  "Returns children names."
+  (children-helper person *family*))
+
+(defun children-helper (person family-tree)
+  (let ((first-entry (first family-tree)))
+    (cond ((null family-tree) nil)
+          ((member person (rest first-entry))
+           (cons (first first-entry) (children-helper person (rest family-tree))))
+          (t (children-helper person (rest family-tree))))))
 
 
 (defun siblings (person)
   "Returns a list of the person's siblings, including genetic half siblings."
-  (let* ((person-parents (rest (assoc person family))))
-    (mapcar (function first) (remove-if-not (function (lambda (entry)
-                     (equal (rest entry) person-parents))) family))))
+  (remove-if (function (lambda (element)
+               (equal element person)))
+             (siblings-helper person *family*)))
+
+(defun siblings-helper (person family-tree)
+  (let ((first-entry (first family-tree))
+        (mother (mother person))
+        (father (father person)))
+    (if (not (and (null mother) (null father)))
+        (cond ((null family-tree) nil)
+              ((or (equal mother (third first-entry)) (equal father (second first-entry)))
+               (cons (first first-entry) (siblings-helper person (rest family-tree))))
+              (t (siblings-helper person (rest family-tree)))))))
+
+(defun mapunion (function list)
+  (reduce (function union) (mapcar function list)))
+
+(defun grandparents (person)
+  "Returns a list of grandparents."
+  (mapunion (function parents) (parents person)))
+
+(defun cousin (person)
+  "Returns a set of biological first cousins."
+  (if (not (null (parents person)))
+      (mapunion (function children)
+                (mapunion (function siblings) (parents person)))))
+
+(defun descended-from (descendant person)
+  "Returns T if descendant."
+  )
