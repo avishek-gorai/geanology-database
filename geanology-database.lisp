@@ -62,44 +62,46 @@
 
 
 (defun parents (person)
-  "Returns person's parents name as a list."
+  "Returns a set of parents."
   (remove-if (function null)
              (list (father person) (mother person))))
 
 
 (defun children (person)
-  "Returns children names."
-  (children-helper person *family*))
-
-(defun children-helper (person family-tree)
-  (let ((first-entry (first family-tree)))
-    (cond ((null family-tree) nil)
-          ((member person (rest first-entry))
-           (cons (first first-entry) (children-helper person (rest family-tree))))
-          (t (children-helper person (rest family-tree))))))
+  "Returns a set of children."
+  (labels ((children-recursive (person family-tree)
+             (let ((first-entry (first family-tree)))
+               (cond ((null family-tree) nil)
+                     ((member person (rest first-entry))
+                      (cons (first first-entry)
+                            (children-recursive person (rest family-tree))))
+                     (t (children-recursive person (rest family-tree)))))))
+    (children-recursive person *family*)))
 
 
 (defun siblings (person)
-  "Returns a list of the person's siblings, including genetic half siblings."
-  (remove-if (function (lambda (element)
-               (equal element person)))
-             (siblings-helper person *family*)))
+  "Returns a set of siblings, including genetic half-siblings."
+  (labels ((siblings-recursive (person family-tree)
+             (let ((first-entry (first family-tree))
+                   (mother (mother person))
+                   (father (father person)))
+               (if (not (and (null mother) (null father)))
+                   (cond ((null family-tree) nil)
+                         ((or (equal mother (third first-entry))
+                              (equal father (second first-entry)))
+                          (cons (first first-entry)
+                                (siblings-recursive person (rest family-tree))))
+                         (t (siblings-recursive person (rest family-tree))))))))
+    (remove-if (function (lambda (element)
+                 (equal element person)))
+               (siblings-recursive person *family*))))
 
-(defun siblings-helper (person family-tree)
-  (let ((first-entry (first family-tree))
-        (mother (mother person))
-        (father (father person)))
-    (if (not (and (null mother) (null father)))
-        (cond ((null family-tree) nil)
-              ((or (equal mother (third first-entry)) (equal father (second first-entry)))
-               (cons (first first-entry) (siblings-helper person (rest family-tree))))
-              (t (siblings-helper person (rest family-tree)))))))
 
 (defun mapunion (function list)
   (reduce (function union) (mapcar function list)))
 
 (defun grandparents (person)
-  "Returns a list of grandparents."
+  "Returns a set of grandparents."
   (mapunion (function parents) (parents person)))
 
 (defun cousin (person)
@@ -108,6 +110,16 @@
       (mapunion (function children)
                 (mapunion (function siblings) (parents person)))))
 
-(defun descended-from (descendant person)
-  "Returns T if descendant."
-  )
+(defun descended-from (person-1 person-2)
+  "Returns T if person-1 is descended from person-2."
+  (and (not (null person-1)) (not (null person-2))
+       (or (member person-2 (parents person-1))
+           (descended-from (mother person-1) person-2)
+           (descended-from (father person-1) person-2))))
+
+(defun ancestors (person)
+  "Returns the set of ancestors."
+  (if (not (null person))
+      (append (parents person)
+              (ancestors (mother person))
+              (ancestors (father person)))))

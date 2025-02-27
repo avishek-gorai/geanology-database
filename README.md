@@ -6,7 +6,7 @@ Keyboard exercise at page number 275, chapter 8 - Recursion, of the book "Common
 
 ## License
 
-GNU General Public License version 3 or later
+GNU General Public License version 3 or later.
 
 
 Copyright (c) 2025 Avishek Gorai <avishekgorai@myyahoo.com>
