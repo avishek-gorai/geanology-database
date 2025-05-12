@@ -15,8 +15,8 @@
 ;;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-(defpackage #:geanology-database
-  (:use #:common-lisp)
+(defpackage geanology-database
+  (:use common-lisp)
   (:export *family*
            father
            mother
