@@ -15,7 +15,7 @@
 ;;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-(asdf:defsystem #:geanology-database
+(asdf:defsystem geanology-database
   :description "Information extraction from a geanological database."
   :author "Avishek Gorai <avishekgorai@myyahoo.com>"
   :license "GNU General Public License version 3 or later"
